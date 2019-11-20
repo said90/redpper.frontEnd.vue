@@ -86,7 +86,6 @@ export default {
         })
 
         self.contactData.forEach((element) => {
-          console.log(element);
           element.fechaNacimiento = moment(element.fechaNacimiento).format(
             'DD-MM-YYYY'
           )

@@ -19,6 +19,20 @@ export default {
   components: { Layout, PageHeader },
   data() {
     return {
+      fields: [
+        'nombres',
+        'apellidos',
+        'fechaNacimiento',
+        'edad',
+        'sexo',
+        'dui',
+        'nit',
+        'telefono',
+        'direccion',
+        'correoElectronico',
+                  { key: 'actions', label: 'Actions' }
+
+      ],
       contactData: contactData,
       title: 'Cartera de Clientes',
       items: [
@@ -63,8 +77,8 @@ export default {
       fechaNacimiento: { required },
       dui: { required },
       nit: { required },
-      telefono: {minLength: minLength(10) },
-      correoElectronico: { email }
+      telefono: { minLength: minLength(10) },
+      correoElectronico: { email },
     },
   },
   computed: {
@@ -86,7 +100,7 @@ export default {
         })
 
         self.contactData.forEach((element) => {
-          console.log(element);
+          element.edad = moment().diff(element.fechaNacimiento, 'year', false)
           element.fechaNacimiento = moment(element.fechaNacimiento).format(
             'DD-MM-YYYY'
           )
@@ -194,6 +208,7 @@ export default {
             <div>
               <b-table
                 id="my-table"
+                :fields="fields"
                 :items="contactData"
                 :per-page="perPage"
                 :current-page="currentPage"
@@ -202,8 +217,12 @@ export default {
                 hover
                 @filtered="onFiltered"
               >
-                <template v-slot:cell(avatar)="data">
-                  <img :src="data.value.image" />
+                <template v-slot:cell(actions)="row">
+                  <b-button
+                    size="sm"
+                    @click="info(row.item, row.index, $event.target)"
+                    
+                  >Edit modal</b-button>
                 </template>
               </b-table>
             </div>

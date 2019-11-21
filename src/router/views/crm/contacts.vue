@@ -1,5 +1,5 @@
 <script>
-import { required, email, minLength } from 'vuelidate/lib/validators'
+import { required } from 'vuelidate/lib/validators'
 
 import appConfig from '@src/app.config'
 import Layout from '@layouts/main'
@@ -71,13 +71,8 @@ export default {
     contacts: {
       nombres: { required },
       apellidos: { required },
-      sexo: { required },
-      fechaNacimiento: { required },
-      dui: { required },
-      nit: { required },
-      telefono: { minLength: minLength(10) },
-      correoElectronico: { email },
-    },
+      sexo: { required }
+      },
   },
   computed: {
     rows() {
@@ -112,34 +107,25 @@ export default {
      * Modal form submit
      */
     handleSubmit(e) {
+      debugger
       this.submitted = true
 
       // stop here if form is invalid
       this.$v.$touch()
       if (this.$v.$invalid) {
-        return
+        return ''
       } else {
-        const name = this.contacts.firstName
-        const email = this.contacts.email
-        const location = this.contacts.location
-        const phone = this.contacts.phone
-        const currentDate = new Date()
-        this.contactData.push({
-          name,
-          email,
-          location,
-          phone,
-          date:
-            currentDate.getDate() +
-            '/' +
-            currentDate.getMonth() +
-            '/' +
-            currentDate.getFullYear(),
-        })
-        this.showmodal = false
-      }
+        var self=this;
+        this.contacts.fechaNacimiento = moment(this.contacts.fechaNacimiento).format('YYYY-MM-DD');
+        axios.post('http://localhost:5000/api/clientes',this.contacts)
+        .then(response=>{
+            console.log(response);
+            self.getClientes();
+        });
       this.submitted = false
-      this.contacts = {}
+      this.showmodal=false;
+      }
+     
     },
     /**
      * hode mondal on close
@@ -346,35 +332,22 @@ export default {
         </div>
 
         <div class="form-group">
-          <label>Fecha de Nacimiento</label>
-          <date-picker          
-           v-model="contacts.fechaNacimiento" format="DD-MM-YYYY"    :first-day-of-week="1" lang="es" :class="{ 'is-invalid': submitted && $v.contacts.fechaNacimiento.$error }"></date-picker>
-          <div
-            v-if="submitted && !$v.contacts.fechaNacimiento.required"
-            class="invalid-feedback"
-          >El campo Fecha de nacimiento es requerido</div>
+          <label for="fechaNacimiento">Fecha de Nacimiento</label>
+          <date-picker v-model="contacts.fechaNacimiento"          
+            format="DD-MM-YYYY"    :first-day-of-week="1" lang="es" 
+           ></date-picker>
+          
         </div>
 
         <div class="form-group">
           <label for="dui">DUI</label>
-          <input
-            id="dui"
-            v-model="contacts.dui"
-            type="text"
-            class="form-control"
-            placeholder="Ingresar DUI"
-          />
+                  <input  v-model="contacts.dui" v-mask="'########-#'" type="text" class="form-control" placeholder="Ingresar DUI" />
         </div>
 
         <div class="form-group">
           <label for="nit">NIT</label>
-          <input
-            id="nit"
-            v-model="contacts.nit"
-            type="text"
-            class="form-control"
-            placeholder="Ingresar NIT"
-          />
+          <input  v-model="contacts.nit" v-mask="'####-######-###-#'" type="text" class="form-control" placeholder="Ingresar NIT" />
+
         </div>
 
         <div class="form-group">
@@ -389,13 +362,7 @@ export default {
         </div>
         <div class="form-group">
           <label for="telefono">Telefono</label>
-          <input
-            id="telefono"
-            v-model="contacts.telefono"
-            type="text"
-            class="form-control"
-            placeholder="Ingresar Telefono"
-          />
+           <input  v-model="contacts.telefono" v-mask="'####-####'" type="text" class="form-control" placeholder="Ingresar telefono" />
         </div>
 
         <div class="form-group">

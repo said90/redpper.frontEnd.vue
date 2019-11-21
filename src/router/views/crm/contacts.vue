@@ -7,6 +7,7 @@ import PageHeader from '@components/page-header'
 import axios from 'axios'
 import moment from 'moment'
 import { contactData } from './dataContacts'
+import DatePicker from 'vue2-datepicker'
 
 /**
  * CRM-contacts component
@@ -16,7 +17,7 @@ export default {
     title: 'Contacts',
     meta: [{ name: 'description', content: appConfig.description }],
   },
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DatePicker },
   data() {
     return {
       fields: [
@@ -25,13 +26,10 @@ export default {
         'fechaNacimiento',
         'edad',
         'sexo',
-        'dui',
-        'nit',
         'telefono',
         'direccion',
         'correoElectronico',
-                  { key: 'actions', label: 'Actions' }
-
+        { key: 'actions', label: 'Actions' },
       ],
       contactData: contactData,
       title: 'Cartera de Clientes',
@@ -218,11 +216,13 @@ export default {
                 @filtered="onFiltered"
               >
                 <template v-slot:cell(actions)="row">
-                  <b-button
-                    size="sm"
-                    @click="info(row.item, row.index, $event.target)"
-                    
-                  >Edit modal</b-button>
+                  <a href="javascript:void(0);" class="action-icon">
+                    <i class="mdi mdi-square-edit-outline" @click="row"></i>
+                  </a>
+
+                  <a class="action-icon">
+                    <i class="mdi mdi-delete"></i>
+                  </a>
                 </template>
               </b-table>
             </div>
@@ -291,7 +291,7 @@ export default {
     <b-modal
       id="modal-1"
       v-model="showmodal"
-      title="Add Contacts"
+      title="Agregar Contacto"
       header-bg-variant="dark"
       header-close-variant="light"
       title-class="text-light font-18"
@@ -299,20 +299,105 @@ export default {
     >
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label for="name">Name</label>
+          <label for="name">Nombres</label>
           <input
             id="name"
-            v-model="contacts.firstName"
+            v-model="contacts.nombres"
             type="text"
             class="form-control"
-            placeholder="Enter name"
-            :class="{ 'is-invalid': submitted && $v.contacts.firstName.$error }"
+            placeholder="Ingresar nombres"
+            :class="{ 'is-invalid': submitted && $v.contacts.nombres.$error }"
           />
           <div
-            v-if="submitted && !$v.contacts.firstName.required"
+            v-if="submitted && !$v.contacts.nombres.required"
             class="invalid-feedback"
-          >First Name is required</div>
+          >El campo nombres es requerido</div>
         </div>
+        <div class="form-group">
+          <label for="apellidos">Apellidos</label>
+          <input
+            id="apellidos"
+            v-model="contacts.apellidos"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar Apellidos"
+            :class="{ 'is-invalid': submitted && $v.contacts.apellidos.$error }"
+          />
+          <div
+            v-if="submitted && !$v.contacts.apellidos.required"
+            class="invalid-feedback"
+          >El campo apellidos es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label for="sexo">Sexo</label>
+          <input
+            id="sexo"
+            v-model="contacts.sexo"
+            type="text"
+            class="form-control"
+            placeholder="Seleccione sexo"
+            :class="{ 'is-invalid': submitted && $v.contacts.sexo.$error }"
+          />
+          <div
+            v-if="submitted && !$v.contacts.sexo.required"
+            class="invalid-feedback"
+          >El campo sexo es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label>Fecha de Nacimiento</label>
+          <date-picker          
+           v-model="contacts.fechaNacimiento" format="DD-MM-YYYY"    :first-day-of-week="1" lang="es" :class="{ 'is-invalid': submitted && $v.contacts.fechaNacimiento.$error }"></date-picker>
+          <div
+            v-if="submitted && !$v.contacts.fechaNacimiento.required"
+            class="invalid-feedback"
+          >El campo Fecha de nacimiento es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label for="dui">DUI</label>
+          <input
+            id="dui"
+            v-model="contacts.dui"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar DUI"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nit">NIT</label>
+          <input
+            id="nit"
+            v-model="contacts.nit"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar NIT"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="direccion">Direccion</label>
+          <input
+            id="direccion"
+            v-model="contacts.direccion"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar Direccion"
+          />
+        </div>
+        <div class="form-group">
+          <label for="telefono">Telefono</label>
+          <input
+            id="telefono"
+            v-model="contacts.telefono"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar Telefono"
+          />
+        </div>
+
         <div class="form-group">
           <label for="exampleInputEmail1">Email address</label>
           <input
@@ -322,44 +407,8 @@ export default {
             name="email"
             class="form-control"
             placeholder="Enter email"
-            :class="{ 'is-invalid': submitted && $v.contacts.email.$error }"
           />
-          <div v-if="submitted && $v.contacts.email.$error" class="invalid-feedback">
-            <span v-if="!$v.contacts.email.required">Email is required</span>
-            <span v-if="!$v.contacts.email.email">Email is invalid</span>
-          </div>
         </div>
-        <div class="form-group">
-          <label for="position">Phone</label>
-          <input
-            id="position"
-            v-model="contacts.phone"
-            type="text"
-            class="form-control"
-            placeholder="Enter phone number"
-            :class="{ 'is-invalid': submitted && $v.contacts.phone.$error }"
-          />
-          <div
-            v-if="submitted && !$v.contacts.phone.required"
-            class="invalid-feedback"
-          >Phone is required</div>
-        </div>
-        <div class="form-group">
-          <label for="company">Location</label>
-          <input
-            id="company"
-            v-model="contacts.location"
-            type="text"
-            class="form-control"
-            placeholder="Enter location"
-            :class="{ 'is-invalid': submitted && $v.contacts.location.$error }"
-          />
-          <div
-            v-if="submitted && !$v.contacts.location.required"
-            class="invalid-feedback"
-          >Location is required</div>
-        </div>
-
         <div class="text-right">
           <button type="submit" class="btn btn-success">Save</button>
           <b-button class="ml-1" variant="danger" @click="hideModal">Cancel</b-button>

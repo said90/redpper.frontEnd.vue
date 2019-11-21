@@ -6,7 +6,6 @@ import Layout from '@layouts/main'
 import PageHeader from '@components/page-header'
 import axios from 'axios'
 import moment from 'moment'
-import { contactData } from './dataContacts'
 import DatePicker from 'vue2-datepicker'
 
 /**
@@ -31,7 +30,7 @@ export default {
         'correoElectronico',
         { key: 'actions', label: 'Actions' },
       ],
-      contactData: contactData,
+      contactData: [],
       title: 'Cartera de Clientes',
       items: [
         {
@@ -81,8 +80,8 @@ export default {
   },
   mounted() {
     // Set the initial number of items
-    this.totalRows = this.contactData.length
-    this.getClientes()
+    this.totalRows = this.contactData.length;
+    this.getClientes();
   },
   methods: {
     getClientes() {
@@ -201,6 +200,22 @@ export default {
                 hover
                 @filtered="onFiltered"
               >
+      <template v-slot:cell(fechaNacimiento)="data">
+        {{ (data.item.fechaNacimiento !== null) ? data.item.fechaNacimiento : '-' }}
+      </template>
+            <template v-slot:cell(edad)="data">
+        {{ (data.item.edad) ? data.item.edad : '-' }}
+      </template>
+                  <template v-slot:cell(telefono)="data">
+        {{ (data.item.telefono) ? data.item.telefono : '-' }}
+      </template>
+                        <template v-slot:cell(direccion)="data">
+        {{ (data.item.direccion) ? data.item.direccion : '-' }}
+      </template>
+                        <template v-slot:cell(correoElectronico)="data">
+        {{ (data.item.correoElectronico) ? data.item.correoElectronico : '-' }}
+      </template>
+      
                 <template v-slot:cell(actions)="row">
                   <a href="javascript:void(0);" class="action-icon">
                     <i class="mdi mdi-square-edit-outline" @click="row"></i>

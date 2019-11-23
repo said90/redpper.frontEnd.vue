@@ -8,6 +8,8 @@ import axios from 'axios'
 import moment from 'moment'
 import DatePicker from 'vue2-datepicker'
 
+import Swal from 'sweetalert2'
+
 /**
  * CRM-contacts component
  */
@@ -55,11 +57,9 @@ export default {
         nit: '',
         direccion: '',
         telefono: '',
-        correoElectronico: ''
+        correoElectronico: '',
       },
-      selectedContact:{
-
-      },
+      selectedContact: {},
       submitted: false,
       showmodal: false,
       totalRows: 1,
@@ -105,9 +105,9 @@ export default {
         console.log(self.contactData)
       })
     },
-    seleccionarCliente(cliente){
+    seleccionarCliente(cliente) {
       cliente[0].edad = moment().diff(cliente[0].fechaNacimiento, 'year', false)
-      this.selectedContact=cliente[0];
+      this.selectedContact = cliente[0]
     },
     modificarClientes(row) {
       this.contacts = row.item
@@ -133,6 +133,13 @@ export default {
         axios
           .post('http://localhost:5000/api/clientes', this.contacts)
           .then((response) => {
+            if (response) {
+              Swal.fire(
+                'Almacenado',
+                'La persona se añadió correctamente',
+                'success'
+              )
+            }
             console.log(response)
             self.getClientes()
           })
@@ -213,22 +220,32 @@ export default {
                 @filtered="onFiltered"
                 @row-selected="seleccionarCliente"
               >
-                <template
-                  v-slot:cell(fechaNacimiento)="data"
-                >{{ (data.item.fechaNacimiento !== null) ? data.item.fechaNacimiento : '-' }}</template>
-                <template v-slot:cell(edad)="data">{{ (data.item.edad) ? data.item.edad : '-' }}</template>
-                <template
-                  v-slot:cell(telefono)="data"
-                >{{ (data.item.telefono) ? data.item.telefono : '-' }}</template>
-                <template
-                  v-slot:cell(direccion)="data"
-                >{{ (data.item.direccion) ? data.item.direccion : '-' }}</template>
-                <template
-                  v-slot:cell(correoElectronico)="data"
-                >{{ (data.item.correoElectronico) ? data.item.correoElectronico : '-' }}</template>
+                <template v-slot:cell(fechaNacimiento)="data">{{
+                  data.item.fechaNacimiento !== null
+                    ? data.item.fechaNacimiento
+                    : '-'
+                }}</template>
+                <template v-slot:cell(edad)="data">{{
+                  data.item.edad ? data.item.edad : '-'
+                }}</template>
+                <template v-slot:cell(telefono)="data">{{
+                  data.item.telefono ? data.item.telefono : '-'
+                }}</template>
+                <template v-slot:cell(direccion)="data">{{
+                  data.item.direccion ? data.item.direccion : '-'
+                }}</template>
+                <template v-slot:cell(correoElectronico)="data">{{
+                  data.item.correoElectronico
+                    ? data.item.correoElectronico
+                    : '-'
+                }}</template>
 
                 <template v-slot:cell(actions)="row">
-                  <a href="javascript:void(0);" class="action-icon" @click="modificarClientes(row)">
+                  <a
+                    href="javascript:void(0);"
+                    class="action-icon"
+                    @click="modificarClientes(row)"
+                  >
                     <i class="mdi mdi-square-edit-outline"></i>
                   </a>
 
@@ -259,32 +276,40 @@ export default {
               alt="Generic placeholder image"
             />
             <div class="media-body">
-              <h3 class="mt-0 mb-1">{{selectedContact.nombres}} {{selectedContact.apellidos}}</h3>
-
+              <h3 class="mt-0 mb-1"
+                >{{ selectedContact.nombres }}
+                {{ selectedContact.apellidos }}</h3
+              >
             </div>
           </div>
 
           <h5 class="mb-3 mt-4 text-uppercase bg-light p-2">
-            <i class="mdi mdi-account-circle mr-1"></i> Informacion Personal de Cliente
+            <i class="mdi mdi-account-circle mr-1"></i> Informacion Personal de
+            Cliente
           </h5>
           <div class>
             <h4 class="font-13 text-muted text-uppercase">About Me :</h4>
             <p class="mb-3">
-              Hi I'm Johnathn Deo,has been the industry's standard dummy text ever since the
-              1500s, when an unknown printer took a galley of type.
+              Hi I'm Johnathn Deo,has been the industry's standard dummy text
+              ever since the 1500s, when an unknown printer took a galley of
+              type.
             </p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Fecha de Cumpleanos:</h4>
-            <p class="mb-3">{{selectedContact.fechaNacimiento}}</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1"
+              >Fecha de Cumpleanos:</h4
+            >
+            <p class="mb-3">{{ selectedContact.fechaNacimiento }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Telefono :</h4>
-            <p class="mb-3">{{selectedContact.telefono}}</p>
+            <p class="mb-3">{{ selectedContact.telefono }}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Direccion de residencia :</h4>
-            <p class="mb-3">{{selectedContact.direccion}}</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1"
+              >Direccion de residencia :</h4
+            >
+            <p class="mb-3">{{ selectedContact.direccion }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Email :</h4>
-            <p class="mb-0">{{selectedContact.correoElectronico}}</p>
+            <p class="mb-0">{{ selectedContact.correoElectronico }}</p>
           </div>
         </div>
         <!-- end card-box-->
@@ -315,7 +340,8 @@ export default {
           <div
             v-if="submitted && !$v.contacts.nombres.required"
             class="invalid-feedback"
-          >El campo nombres es requerido</div>
+            >El campo nombres es requerido</div
+          >
         </div>
         <div class="form-group">
           <label for="apellidos">Apellidos</label>
@@ -330,7 +356,8 @@ export default {
           <div
             v-if="submitted && !$v.contacts.apellidos.required"
             class="invalid-feedback"
-          >El campo apellidos es requerido</div>
+            >El campo apellidos es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -346,7 +373,8 @@ export default {
           <div
             v-if="submitted && !$v.contacts.sexo.required"
             class="invalid-feedback"
-          >El campo sexo es requerido</div>
+            >El campo sexo es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -415,11 +443,12 @@ export default {
         </div>
         <div class="text-right">
           <button type="submit" class="btn btn-success">Save</button>
-          <b-button class="ml-1" variant="danger" @click="hideModal">Cancel</b-button>
+          <b-button class="ml-1" variant="danger" @click="hideModal"
+            >Cancel</b-button
+          >
         </div>
       </form>
     </b-modal>
     <!-- end modal -->
   </Layout>
 </template>
- 

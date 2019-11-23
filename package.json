@@ -51,6 +51,7 @@
     "lodash": "4.17.11",
     "metismenujs": "^1.1.0",
     "moment": "^2.24.0",
+    "sweetalert2": "^9.4.0",
     "v-click-outside": "^2.1.4",
     "v-mask": "^2.0.2",
     "vue": "^2.6.10",

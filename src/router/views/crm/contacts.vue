@@ -55,7 +55,10 @@ export default {
         nit: '',
         direccion: '',
         telefono: '',
-        correoElectronico: '',
+        correoElectronico: ''
+      },
+      selectedContact:{
+
       },
       submitted: false,
       showmodal: false,
@@ -70,8 +73,8 @@ export default {
     contacts: {
       nombres: { required },
       apellidos: { required },
-      sexo: { required }
-      },
+      sexo: { required },
+    },
   },
   computed: {
     rows() {
@@ -80,8 +83,8 @@ export default {
   },
   mounted() {
     // Set the initial number of items
-    this.totalRows = this.contactData.length;
-    this.getClientes();
+    this.totalRows = this.contactData.length
+    this.getClientes()
   },
   methods: {
     getClientes() {
@@ -102,6 +105,15 @@ export default {
         console.log(self.contactData)
       })
     },
+    seleccionarCliente(cliente){
+      cliente[0].edad = moment().diff(cliente[0].fechaNacimiento, 'year', false)
+      this.selectedContact=cliente[0];
+    },
+    modificarClientes(row) {
+      this.contacts = row.item
+      this.showmodal = true
+    },
+
     /**
      * Modal form submit
      */
@@ -114,17 +126,19 @@ export default {
       if (this.$v.$invalid) {
         return ''
       } else {
-        var self=this;
-        this.contacts.fechaNacimiento = moment(this.contacts.fechaNacimiento).format('YYYY-MM-DD');
-        axios.post('http://localhost:5000/api/clientes',this.contacts)
-        .then(response=>{
-            console.log(response);
-            self.getClientes();
-        });
-      this.submitted = false
-      this.showmodal=false;
+        var self = this
+        this.contacts.fechaNacimiento = moment(
+          this.contacts.fechaNacimiento
+        ).format('YYYY-MM-DD')
+        axios
+          .post('http://localhost:5000/api/clientes', this.contacts)
+          .then((response) => {
+            console.log(response)
+            self.getClientes()
+          })
+        this.submitted = false
+        this.showmodal = false
       }
-     
     },
     /**
      * hode mondal on close
@@ -163,16 +177,13 @@ export default {
                       id="filterInput"
                       v-model="filter"
                       type="search"
-                      placeholder="Search..."
+                      placeholder="Buscar Cliente"
                     ></b-form-input>
                   </div>
                 </form>
               </div>
               <div class="col-sm-8">
                 <div class="text-sm-right">
-                  <button type="button" class="btn btn-success mb-2 mr-1">
-                    <i class="mdi mdi-settings"></i>
-                  </button>
                   <b-button
                     href="javscript: void(0);"
                     class="mb-2"
@@ -180,8 +191,7 @@ export default {
                     type="button"
                     @click="showmodal = true"
                   >
-                    <i class="mdi mdi-plus-circle mr-1"></i> Add
-                    Contact
+                    <i class="mdi mdi-plus-circle mr-1"></i> Agregar Cliente
                   </b-button>
                 </div>
               </div>
@@ -191,6 +201,8 @@ export default {
             <div>
               <b-table
                 id="my-table"
+                selectable
+                select-mode="single"
                 :fields="fields"
                 :items="contactData"
                 :per-page="perPage"
@@ -199,26 +211,25 @@ export default {
                 :filter-included-fields="filterOn"
                 hover
                 @filtered="onFiltered"
+                @row-selected="seleccionarCliente"
               >
-      <template v-slot:cell(fechaNacimiento)="data">
-        {{ (data.item.fechaNacimiento !== null) ? data.item.fechaNacimiento : '-' }}
-      </template>
-            <template v-slot:cell(edad)="data">
-        {{ (data.item.edad) ? data.item.edad : '-' }}
-      </template>
-                  <template v-slot:cell(telefono)="data">
-        {{ (data.item.telefono) ? data.item.telefono : '-' }}
-      </template>
-                        <template v-slot:cell(direccion)="data">
-        {{ (data.item.direccion) ? data.item.direccion : '-' }}
-      </template>
-                        <template v-slot:cell(correoElectronico)="data">
-        {{ (data.item.correoElectronico) ? data.item.correoElectronico : '-' }}
-      </template>
-      
+                <template
+                  v-slot:cell(fechaNacimiento)="data"
+                >{{ (data.item.fechaNacimiento !== null) ? data.item.fechaNacimiento : '-' }}</template>
+                <template v-slot:cell(edad)="data">{{ (data.item.edad) ? data.item.edad : '-' }}</template>
+                <template
+                  v-slot:cell(telefono)="data"
+                >{{ (data.item.telefono) ? data.item.telefono : '-' }}</template>
+                <template
+                  v-slot:cell(direccion)="data"
+                >{{ (data.item.direccion) ? data.item.direccion : '-' }}</template>
+                <template
+                  v-slot:cell(correoElectronico)="data"
+                >{{ (data.item.correoElectronico) ? data.item.correoElectronico : '-' }}</template>
+
                 <template v-slot:cell(actions)="row">
-                  <a href="javascript:void(0);" class="action-icon">
-                    <i class="mdi mdi-square-edit-outline" @click="row"></i>
+                  <a href="javascript:void(0);" class="action-icon" @click="modificarClientes(row)">
+                    <i class="mdi mdi-square-edit-outline"></i>
                   </a>
 
                   <a class="action-icon">
@@ -248,21 +259,13 @@ export default {
               alt="Generic placeholder image"
             />
             <div class="media-body">
-              <h4 class="mt-0 mb-1">Jade M. Walker</h4>
-              <p class="text-muted">Branch manager</p>
-              <p class="text-muted">
-                <i class="mdi mdi-office-building"></i> Vine Corporation
-              </p>
+              <h3 class="mt-0 mb-1">{{selectedContact.nombres}} {{selectedContact.apellidos}}</h3>
 
-              <a href="javascript: void(0);" class="btn- btn-xs btn-info">Send Email</a>
-              <a href="javascript: void(0);" class="btn- btn-xs btn-secondary ml-1">Call</a>
-              <a href="javascript: void(0);" class="btn- btn-xs btn-secondary ml-1">Edit</a>
             </div>
           </div>
 
           <h5 class="mb-3 mt-4 text-uppercase bg-light p-2">
-            <i class="mdi mdi-account-circle mr-1"></i> Personal
-            Information
+            <i class="mdi mdi-account-circle mr-1"></i> Informacion Personal de Cliente
           </h5>
           <div class>
             <h4 class="font-13 text-muted text-uppercase">About Me :</h4>
@@ -271,17 +274,17 @@ export default {
               1500s, when an unknown printer took a galley of type.
             </p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Date of Birth :</h4>
-            <p class="mb-3">March 23, 1984 (34 Years)</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Fecha de Cumpleanos:</h4>
+            <p class="mb-3">{{selectedContact.fechaNacimiento}}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Company :</h4>
-            <p class="mb-3">Vine Corporation</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Telefono :</h4>
+            <p class="mb-3">{{selectedContact.telefono}}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Added :</h4>
-            <p class="mb-3">April 22, 2016</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Direccion de residencia :</h4>
+            <p class="mb-3">{{selectedContact.direccion}}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Updated :</h4>
-            <p class="mb-0">Dec 13, 2017</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Email :</h4>
+            <p class="mb-0">{{selectedContact.correoElectronico}}</p>
           </div>
         </div>
         <!-- end card-box-->
@@ -348,21 +351,34 @@ export default {
 
         <div class="form-group">
           <label for="fechaNacimiento">Fecha de Nacimiento</label>
-          <date-picker v-model="contacts.fechaNacimiento"          
-            format="DD-MM-YYYY"    :first-day-of-week="1" lang="es" 
-           ></date-picker>
-          
+          <date-picker
+            v-model="contacts.fechaNacimiento"
+            format="DD-MM-YYYY"
+            value-type="format"
+            lang="es"
+          ></date-picker>
         </div>
 
         <div class="form-group">
           <label for="dui">DUI</label>
-                  <input  v-model="contacts.dui" v-mask="'########-#'" type="text" class="form-control" placeholder="Ingresar DUI" />
+          <input
+            v-model="contacts.dui"
+            v-mask="'########-#'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar DUI"
+          />
         </div>
 
         <div class="form-group">
           <label for="nit">NIT</label>
-          <input  v-model="contacts.nit" v-mask="'####-######-###-#'" type="text" class="form-control" placeholder="Ingresar NIT" />
-
+          <input
+            v-model="contacts.nit"
+            v-mask="'####-######-###-#'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar NIT"
+          />
         </div>
 
         <div class="form-group">
@@ -377,7 +393,13 @@ export default {
         </div>
         <div class="form-group">
           <label for="telefono">Telefono</label>
-           <input  v-model="contacts.telefono" v-mask="'####-####'" type="text" class="form-control" placeholder="Ingresar telefono" />
+          <input
+            v-model="contacts.telefono"
+            v-mask="'####-####'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar telefono"
+          />
         </div>
 
         <div class="form-group">

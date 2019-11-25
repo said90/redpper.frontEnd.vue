@@ -1,12 +1,12 @@
 <script>
 import { required } from 'vuelidate/lib/validators'
 
-import appConfig from '@src/app.config'
 import Layout from '@layouts/main'
 import PageHeader from '@components/page-header'
 import axios from 'axios'
 import moment from 'moment'
 import DatePicker from 'vue2-datepicker'
+import Multiselect from 'vue-multiselect'
 
 import Swal from 'sweetalert2'
 
@@ -15,40 +15,21 @@ import Swal from 'sweetalert2'
  */
 export default {
   page: {
-    title: 'Contacts',
-    meta: [{ name: 'description', content: appConfig.description }],
+    title: 'Cartera de Clientes',
   },
-  components: { Layout, PageHeader, DatePicker },
+  components: { Layout, PageHeader, DatePicker, Multiselect },
   data() {
     return {
-      fields: [
+      columnasTabla: [
         'nombres',
         'apellidos',
-        'fechaNacimiento',
-        'edad',
         'sexo',
-        'telefono',
-        'direccion',
-        'correoElectronico',
         { key: 'actions', label: 'Actions' },
       ],
-      contactData: [],
+      clientesTable: [],
       title: 'Cartera de Clientes',
-      items: [
-        {
-          text: 'UBold',
-          href: '/',
-        },
-        {
-          text: 'CRM',
-          href: '/',
-        },
-        {
-          text: 'Contacts',
-          active: true,
-        },
-      ],
-      contacts: {
+      clientes: [],
+      cliente: {
         nombres: '',
         apellidos: '',
         sexo: '',
@@ -59,7 +40,8 @@ export default {
         telefono: '',
         correoElectronico: '',
       },
-      selectedContact: {},
+      clienteSeleccionado: {},
+      sexoOpciones: ['Femenino', 'Masculino'],
       submitted: false,
       showmodal: false,
       totalRows: 1,
@@ -67,10 +49,11 @@ export default {
       currentPage: 1,
       filter: null,
       filterOn: [],
+      id:{}
     }
   },
   validations: {
-    contacts: {
+    cliente: {
       nombres: { required },
       apellidos: { required },
       sexo: { required },
@@ -78,23 +61,24 @@ export default {
   },
   computed: {
     rows() {
-      return this.contactData.length
+      return this.clientesTable.length
     },
   },
   mounted() {
     // Set the initial number of items
-    this.totalRows = this.contactData.length
+    this.totalRows = this.clientesTable.length
     this.getClientes()
   },
   methods: {
     getClientes() {
       var self = this
       axios.get('http://localhost:5000/api/clientes').then((response) => {
-        self.contactData = response.data.map((x) => {
+        self.clientes = response.data
+        self.clientesTable = response.data.map((x) => {
           return x.persona
         })
 
-        self.contactData.forEach((element) => {
+        self.clientesTable.forEach((element) => {
           element.edad = moment().diff(element.fechaNacimiento, 'year', false)
           element.fechaNacimiento = moment(element.fechaNacimiento).format(
             'DD-MM-YYYY'
@@ -102,23 +86,51 @@ export default {
           element.sexo = element.sexo === 'M' ? 'Masculino' : 'Femenino'
         })
 
-        console.log(self.contactData)
+        console.log(self.clientesTable)
       })
     },
     seleccionarCliente(cliente) {
       cliente[0].edad = moment().diff(cliente[0].fechaNacimiento, 'year', false)
-      this.selectedContact = cliente[0]
+      this.clienteSeleccionado = cliente[0]
     },
-    modificarClientes(row) {
-      this.contacts = row.item
-      this.showmodal = true
+    llenarCliente(row) {
+      this.cliente = row.item
+      this.$bvModal.show('modificar-modal')
+    },
+    eliminarCliente(row) {
+      var self = this
+      var cliente = this.clientes.find((x) => x.idPersona === row.item.id)
+      var data = {id:cliente.id};
+      this.id=data
+      Swal.fire({
+        title: 'Esta seguro de eliminar este cliente?',
+        text: 'Si eliminas este cliente esta informacion no podra recuperarse.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Si eliminar!',
+      }).then((result) => {
+        axios.delete('http://localhost:5000/api/clientes', {
+          params:data
+        })
+          .then((response) => {
+            if (response) {
+              self.getClientes();
+              Swal.fire(
+                'Eliminado!',
+                'El cliente ha sido eleminado satisfactoriamente.',
+                'success'
+              )
+            }
+          })
+      })
     },
 
     /**
      * Modal form submit
      */
     handleSubmit(e) {
-      debugger
       this.submitted = true
 
       // stop here if form is invalid
@@ -127,16 +139,16 @@ export default {
         return ''
       } else {
         var self = this
-        this.contacts.fechaNacimiento = moment(
-          this.contacts.fechaNacimiento
+        this.cliente.fechaNacimiento = moment(
+          this.cliente.fechaNacimiento
         ).format('YYYY-MM-DD')
         axios
-          .post('http://localhost:5000/api/clientes', this.contacts)
+          .post('http://localhost:5000/api/clientes', this.cliente)
           .then((response) => {
             if (response) {
               Swal.fire(
                 'Almacenado',
-                'La persona se añadió correctamente',
+                'La cliente se agrego correctamente',
                 'success'
               )
             }
@@ -147,13 +159,41 @@ export default {
         this.showmodal = false
       }
     },
+    modificarCliente(e) {
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        return ''
+      } else {
+        var self = this
+        var cliente = this.clientes.find((x) => x.idPersona === this.cliente.id)
+        cliente.persona = this.cliente
+        cliente.persona.fechaNacimiento = moment(
+          cliente.persona.fechaNacimiento,
+          'DD-MM-YYYY'
+        )
+        cliente.persona.fechaNacimiento = cliente.persona.fechaNacimiento.toDate()
+        axios
+          .put('http://localhost:5000/api/clientes', cliente)
+          .then((response) => {
+            if (response) {
+              Swal.fire(
+                'Modificar',
+                'El cliente se modifico correctamente',
+                'success'
+              )
+            }
+            self.$bvModal.hide('modificar-modal')
+          })
+      }
+    },
     /**
      * hode mondal on close
      */
     hideModal(e) {
       this.submitted = false
       this.showmodal = false
-      this.contacts = {}
+      this.cliente = {}
+      this.$bvModal.hide('modificar-modal')
     },
 
     /**
@@ -170,7 +210,7 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader :title="title" :items="items" />
+    <PageHeader :title="title" />
     <div class="row">
       <div class="col-xl-8">
         <div class="card">
@@ -210,8 +250,8 @@ export default {
                 id="my-table"
                 selectable
                 select-mode="single"
-                :fields="fields"
-                :items="contactData"
+                :fields="columnasTabla"
+                :items="clientesTable"
                 :per-page="perPage"
                 :current-page="currentPage"
                 :filter="filter"
@@ -220,36 +260,12 @@ export default {
                 @filtered="onFiltered"
                 @row-selected="seleccionarCliente"
               >
-                <template v-slot:cell(fechaNacimiento)="data">{{
-                  data.item.fechaNacimiento !== null
-                    ? data.item.fechaNacimiento
-                    : '-'
-                }}</template>
-                <template v-slot:cell(edad)="data">{{
-                  data.item.edad ? data.item.edad : '-'
-                }}</template>
-                <template v-slot:cell(telefono)="data">{{
-                  data.item.telefono ? data.item.telefono : '-'
-                }}</template>
-                <template v-slot:cell(direccion)="data">{{
-                  data.item.direccion ? data.item.direccion : '-'
-                }}</template>
-                <template v-slot:cell(correoElectronico)="data">{{
-                  data.item.correoElectronico
-                    ? data.item.correoElectronico
-                    : '-'
-                }}</template>
-
                 <template v-slot:cell(actions)="row">
-                  <a
-                    href="javascript:void(0);"
-                    class="action-icon"
-                    @click="modificarClientes(row)"
-                  >
+                  <a href="javascript:void(0);" class="action-icon" @click="llenarCliente(row)">
                     <i class="mdi mdi-square-edit-outline"></i>
                   </a>
 
-                  <a class="action-icon">
+                  <a class="action-icon" @click="eliminarCliente(row)">
                     <i class="mdi mdi-delete"></i>
                   </a>
                 </template>
@@ -270,16 +286,11 @@ export default {
       <div class="col-xl-4">
         <div class="card-box">
           <div class="media mb-3">
-            <img
-              class="d-flex mr-3 rounded-circle avatar-lg"
-              src="@assets/images/users/user-8.jpg"
-              alt="Generic placeholder image"
-            />
             <div class="media-body">
-              <h3 class="mt-0 mb-1"
-                >{{ selectedContact.nombres }}
-                {{ selectedContact.apellidos }}</h3
-              >
+              <h2 class="mt-0 mb-1" style="text-align:center">
+                {{ clienteSeleccionado.nombres }}
+                {{ clienteSeleccionado.apellidos }}
+              </h2>
             </div>
           </div>
 
@@ -288,28 +299,17 @@ export default {
             Cliente
           </h5>
           <div class>
-            <h4 class="font-13 text-muted text-uppercase">About Me :</h4>
-            <p class="mb-3">
-              Hi I'm Johnathn Deo,has been the industry's standard dummy text
-              ever since the 1500s, when an unknown printer took a galley of
-              type.
-            </p>
-
-            <h4 class="font-13 text-muted text-uppercase mb-1"
-              >Fecha de Cumpleanos:</h4
-            >
-            <p class="mb-3">{{ selectedContact.fechaNacimiento }}</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Fecha de Cumpleanos:</h4>
+            <p class="mb-3">{{ clienteSeleccionado.fechaNacimiento }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Telefono :</h4>
-            <p class="mb-3">{{ selectedContact.telefono }}</p>
+            <p class="mb-3">{{ clienteSeleccionado.telefono }}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1"
-              >Direccion de residencia :</h4
-            >
-            <p class="mb-3">{{ selectedContact.direccion }}</p>
+            <h4 class="font-13 text-muted text-uppercase mb-1">Direccion de residencia :</h4>
+            <p class="mb-3">{{ clienteSeleccionado.direccion }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Email :</h4>
-            <p class="mb-0">{{ selectedContact.correoElectronico }}</p>
+            <p class="mb-0">{{ clienteSeleccionado.correoElectronico }}</p>
           </div>
         </div>
         <!-- end card-box-->
@@ -325,62 +325,58 @@ export default {
       header-close-variant="light"
       title-class="text-light font-18"
       hide-footer
+      @hidden="hideModal"
     >
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label for="name">Nombres</label>
           <input
             id="name"
-            v-model="contacts.nombres"
+            v-model="cliente.nombres"
             type="text"
             class="form-control"
             placeholder="Ingresar nombres"
-            :class="{ 'is-invalid': submitted && $v.contacts.nombres.$error }"
+            :class="{ 'is-invalid': submitted && $v.cliente.nombres.$error }"
           />
           <div
-            v-if="submitted && !$v.contacts.nombres.required"
+            v-if="submitted && !$v.cliente.nombres.required"
             class="invalid-feedback"
-            >El campo nombres es requerido</div
-          >
+          >El campo nombres es requerido</div>
         </div>
         <div class="form-group">
           <label for="apellidos">Apellidos</label>
           <input
             id="apellidos"
-            v-model="contacts.apellidos"
+            v-model="cliente.apellidos"
             type="text"
             class="form-control"
             placeholder="Ingresar Apellidos"
-            :class="{ 'is-invalid': submitted && $v.contacts.apellidos.$error }"
+            :class="{ 'is-invalid': submitted && $v.cliente.apellidos.$error }"
           />
           <div
-            v-if="submitted && !$v.contacts.apellidos.required"
+            v-if="submitted && !$v.cliente.apellidos.required"
             class="invalid-feedback"
-            >El campo apellidos es requerido</div
-          >
+          >El campo apellidos es requerido</div>
         </div>
 
         <div class="form-group">
           <label for="sexo">Sexo</label>
-          <input
-            id="sexo"
-            v-model="contacts.sexo"
-            type="text"
-            class="form-control"
-            placeholder="Seleccione sexo"
-            :class="{ 'is-invalid': submitted && $v.contacts.sexo.$error }"
-          />
+          <multiselect
+            v-model="cliente.sexo"
+            :options="sexoOpciones"
+            placeholder="Seleccionar Sexo"
+          ></multiselect>
+
           <div
             v-if="submitted && !$v.contacts.sexo.required"
             class="invalid-feedback"
-            >El campo sexo es requerido</div
-          >
+          >El campo sexo es requerido</div>
         </div>
 
         <div class="form-group">
           <label for="fechaNacimiento">Fecha de Nacimiento</label>
           <date-picker
-            v-model="contacts.fechaNacimiento"
+            v-model="cliente.fechaNacimiento"
             format="DD-MM-YYYY"
             value-type="format"
             lang="es"
@@ -390,7 +386,7 @@ export default {
         <div class="form-group">
           <label for="dui">DUI</label>
           <input
-            v-model="contacts.dui"
+            v-model="cliente.dui"
             v-mask="'########-#'"
             type="text"
             class="form-control"
@@ -401,7 +397,7 @@ export default {
         <div class="form-group">
           <label for="nit">NIT</label>
           <input
-            v-model="contacts.nit"
+            v-model="cliente.nit"
             v-mask="'####-######-###-#'"
             type="text"
             class="form-control"
@@ -413,7 +409,7 @@ export default {
           <label for="direccion">Direccion</label>
           <input
             id="direccion"
-            v-model="contacts.direccion"
+            v-model="cliente.direccion"
             type="text"
             class="form-control"
             placeholder="Ingresar Direccion"
@@ -422,7 +418,7 @@ export default {
         <div class="form-group">
           <label for="telefono">Telefono</label>
           <input
-            v-model="contacts.telefono"
+            v-model="cliente.telefono"
             v-mask="'####-####'"
             type="text"
             class="form-control"
@@ -434,7 +430,7 @@ export default {
           <label for="exampleInputEmail1">Email address</label>
           <input
             id="email"
-            v-model="contacts.email"
+            v-model="cliente.email"
             type="email"
             name="email"
             class="form-control"
@@ -443,12 +439,134 @@ export default {
         </div>
         <div class="text-right">
           <button type="submit" class="btn btn-success">Save</button>
-          <b-button class="ml-1" variant="danger" @click="hideModal"
-            >Cancel</b-button
-          >
+          <b-button class="ml-1" variant="danger" @click="hideModal">Cancel</b-button>
         </div>
       </form>
     </b-modal>
     <!-- end modal -->
+    <b-modal
+      id="modificar-modal"
+      title="Modificar Cliente"
+      header-bg-variant="dark"
+      header-close-variant="light"
+      title-class="text-light font-18"
+      hide-footer
+      @hidden="hideModal"
+    >
+      <form @submit.prevent="modificarCliente">
+        <div class="form-group">
+          <label for="name">Nombres</label>
+          <input
+            id="name"
+            v-model="cliente.nombres"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar nombres"
+            :class="{ 'is-invalid': submitted && $v.cliente.nombres.$error }"
+          />
+          <div
+            v-if="submitted && !$v.cliente.nombres.required"
+            class="invalid-feedback"
+          >El campo nombres es requerido</div>
+        </div>
+        <div class="form-group">
+          <label for="apellidos">Apellidos</label>
+          <input
+            id="apellidos"
+            v-model="cliente.apellidos"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar Apellidos"
+            :class="{ 'is-invalid': submitted && $v.cliente.apellidos.$error }"
+          />
+          <div
+            v-if="submitted && !$v.cliente.apellidos.required"
+            class="invalid-feedback"
+          >El campo apellidos es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label for="sexo">Sexo</label>
+          <multiselect
+            v-model="cliente.sexo"
+            :options="sexoOpciones"
+            placeholder="Seleccionar Sexo"
+          ></multiselect>
+          <div
+            v-if="submitted && !$v.contacts.sexo.required"
+            class="invalid-feedback"
+          >El campo sexo es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaNacimiento">Fecha de Nacimiento</label>
+          <date-picker
+            v-model="cliente.fechaNacimiento"
+            format="DD-MM-YYYY"
+            value-type="format"
+            lang="es"
+          ></date-picker>
+        </div>
+
+        <div class="form-group">
+          <label for="dui">DUI</label>
+          <input
+            v-model="cliente.dui"
+            v-mask="'########-#'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar DUI"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nit">NIT</label>
+          <input
+            v-model="cliente.nit"
+            v-mask="'####-######-###-#'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar NIT"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="direccion">Direccion</label>
+          <input
+            id="direccion"
+            v-model="cliente.direccion"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar Direccion"
+          />
+        </div>
+        <div class="form-group">
+          <label for="telefono">Telefono</label>
+          <input
+            v-model="cliente.telefono"
+            v-mask="'####-####'"
+            type="text"
+            class="form-control"
+            placeholder="Ingresar telefono"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input
+            id="email"
+            v-model="cliente.email"
+            type="email"
+            name="email"
+            class="form-control"
+            placeholder="Enter email"
+          />
+        </div>
+        <div class="text-right">
+          <button type="submit" class="btn btn-success">Modificar</button>
+          <b-button class="ml-1" variant="danger" @click="hideModal">Cancelar</b-button>
+        </div>
+      </form>
+    </b-modal>
   </Layout>
 </template>

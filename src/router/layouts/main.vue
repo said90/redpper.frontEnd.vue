@@ -1,11 +1,10 @@
 <script>
-import TopBar from '@components/top-bar'
 import NavBar from '@components/nav-bar'
 import RightBar from '@components/right-bar'
 import Footer from '@components/footer'
 
 export default {
-  components: { TopBar, NavBar, RightBar, Footer },
+  components: {  NavBar, RightBar, Footer },
   data() {
     return {
       isMenuOpened: false,
@@ -34,10 +33,7 @@ export default {
 <template>
   <div>
     <header id="topnav">
-      <TopBar
-        :user="user"
-        :is-menu-opened="isMenuOpened"
-      />
+
       <NavBar :is-menu-opened="isMenuOpened" />
     </header>
 

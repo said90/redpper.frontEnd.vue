@@ -49,7 +49,7 @@ export default {
       currentPage: 1,
       filter: null,
       filterOn: [],
-      id:{}
+      id: {},
     }
   },
   validations: {
@@ -100,8 +100,8 @@ export default {
     eliminarCliente(row) {
       var self = this
       var cliente = this.clientes.find((x) => x.idPersona === row.item.id)
-      var data = {id:cliente.id};
-      this.id=data
+      var data = { id: cliente.id }
+      this.id = data
       Swal.fire({
         title: 'Esta seguro de eliminar este cliente?',
         text: 'Si eliminas este cliente esta informacion no podra recuperarse.',
@@ -110,20 +110,21 @@ export default {
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Si eliminar!',
+        cancelButtonText: 'Cancelar',
       }).then((result) => {
-        axios.delete('http://localhost:5000/api/clientes', {
-          params:data
-        })
-          .then((response) => {
-            if (response) {
-              self.getClientes();
-              Swal.fire(
-                'Eliminado!',
-                'El cliente ha sido eleminado satisfactoriamente.',
-                'success'
-              )
-            }
+        if (result.value) {
+          Swal.fire(
+            'Eliminado!',
+            'El cliente ha sido eleminado satisfactoriamente.',
+            'success'
+          )
+          axios.delete('http://localhost:5000/api/clientes', {
+            params: data,
           })
+          self.getClientes()
+        } else {
+          
+        }
       })
     },
 
@@ -261,7 +262,11 @@ export default {
                 @row-selected="seleccionarCliente"
               >
                 <template v-slot:cell(actions)="row">
-                  <a href="javascript:void(0);" class="action-icon" @click="llenarCliente(row)">
+                  <a
+                    href="javascript:void(0);"
+                    class="action-icon"
+                    @click="llenarCliente(row)"
+                  >
                     <i class="mdi mdi-square-edit-outline"></i>
                   </a>
 
@@ -299,13 +304,17 @@ export default {
             Cliente
           </h5>
           <div class>
-            <h4 class="font-13 text-muted text-uppercase mb-1">Fecha de Cumpleanos:</h4>
+            <h4 class="font-13 text-muted text-uppercase mb-1"
+              >Fecha de Cumpleanos:</h4
+            >
             <p class="mb-3">{{ clienteSeleccionado.fechaNacimiento }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Telefono :</h4>
             <p class="mb-3">{{ clienteSeleccionado.telefono }}</p>
 
-            <h4 class="font-13 text-muted text-uppercase mb-1">Direccion de residencia :</h4>
+            <h4 class="font-13 text-muted text-uppercase mb-1"
+              >Direccion de residencia :</h4
+            >
             <p class="mb-3">{{ clienteSeleccionado.direccion }}</p>
 
             <h4 class="font-13 text-muted text-uppercase mb-1">Email :</h4>
@@ -341,7 +350,8 @@ export default {
           <div
             v-if="submitted && !$v.cliente.nombres.required"
             class="invalid-feedback"
-          >El campo nombres es requerido</div>
+            >El campo nombres es requerido</div
+          >
         </div>
         <div class="form-group">
           <label for="apellidos">Apellidos</label>
@@ -356,7 +366,8 @@ export default {
           <div
             v-if="submitted && !$v.cliente.apellidos.required"
             class="invalid-feedback"
-          >El campo apellidos es requerido</div>
+            >El campo apellidos es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -370,7 +381,8 @@ export default {
           <div
             v-if="submitted && !$v.contacts.sexo.required"
             class="invalid-feedback"
-          >El campo sexo es requerido</div>
+            >El campo sexo es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -439,7 +451,9 @@ export default {
         </div>
         <div class="text-right">
           <button type="submit" class="btn btn-success">Save</button>
-          <b-button class="ml-1" variant="danger" @click="hideModal">Cancel</b-button>
+          <b-button class="ml-1" variant="danger" @click="hideModal"
+            >Cancel</b-button
+          >
         </div>
       </form>
     </b-modal>
@@ -467,7 +481,8 @@ export default {
           <div
             v-if="submitted && !$v.cliente.nombres.required"
             class="invalid-feedback"
-          >El campo nombres es requerido</div>
+            >El campo nombres es requerido</div
+          >
         </div>
         <div class="form-group">
           <label for="apellidos">Apellidos</label>
@@ -482,7 +497,8 @@ export default {
           <div
             v-if="submitted && !$v.cliente.apellidos.required"
             class="invalid-feedback"
-          >El campo apellidos es requerido</div>
+            >El campo apellidos es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -495,7 +511,8 @@ export default {
           <div
             v-if="submitted && !$v.contacts.sexo.required"
             class="invalid-feedback"
-          >El campo sexo es requerido</div>
+            >El campo sexo es requerido</div
+          >
         </div>
 
         <div class="form-group">
@@ -564,7 +581,9 @@ export default {
         </div>
         <div class="text-right">
           <button type="submit" class="btn btn-success">Modificar</button>
-          <b-button class="ml-1" variant="danger" @click="hideModal">Cancelar</b-button>
+          <b-button class="ml-1" variant="danger" @click="hideModal"
+            >Cancelar</b-button
+          >
         </div>
       </form>
     </b-modal>
